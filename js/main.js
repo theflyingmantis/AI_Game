@@ -14,8 +14,10 @@ function buttonClicked(thisObject){
 		let finalPos = thisObject.id;
 		console.log(initialPos,finalPos);
 		// console.log(board);
-		moves = Moves(initialPos);
-		// console.log(moves);
+		let index = initialPos.split(',');
+		let x = parseInt(index[0]);
+		let y = parseInt(index[1]);
+		moves = Moves(board,x,y);
 		let index1 = initialPos.split(',');
 		let x1 = parseInt(index1[0]);
 		let y1 = parseInt(index1[1]);
@@ -35,6 +37,9 @@ function buttonClicked(thisObject){
 		}
 		else{
 			playMove(move);
+			let boardCopy = JSON.parse(JSON.stringify(board));
+			let botMove = ALPHA_BETA_SEARCH(boardCopy);
+			console.log(botMove);
 		}
 		
 	}
@@ -55,7 +60,6 @@ function playMove(move){
 	let y1=move[0][1];
 	let x2=move[1][0];
 	let y2=move[1][1];
-	console.log(x1,y1,x2,y2);
 	if (x1==x2){
 		if (y1-y2==2){
 			turnPiece(x1,y1-1)
@@ -84,7 +88,6 @@ function playMove(move){
 	if (x1-x2==2 &&y1-y2==2){
 		turnPiece(x2+1,y2+1);
 	}
-	console.log(board);
 	let temp = board[x2][y2];
 	board[x2][y2]=board[x1][y1];
 	board[x1][y1]=0;
@@ -145,62 +148,50 @@ function updateUI(){
 	}
 }
 
-function compare2arrays(arr1,arr2){
-	console.log(arr1[0],arr2[0]);
-	console.log(arr1[1],arr2[1]);
-	if (arr1[0]==arr2[0] && arr1[1]==arr2[1]){
-		return true;
-	}
-	return false;
-}
 
-function Moves(initialPos){
-	let index = initialPos.split(',');
-	let x = parseInt(index[0]);
-	let y = parseInt(index[1]);
+function Moves(board,x,y){
+	
 	let objectType = board[x][y];
 	let moves = [];
 
-	if (checkLeft(objectType,x,y)['type']){
-		moves.push(checkLeft(objectType,x,y)['answer']);
+	if (checkLeft(board,objectType,x,y)['type']){
+		moves.push(checkLeft(board,objectType,x,y)['answer']);
 	}
-	if (checkRight(objectType,x,y)['type'] ){
-		moves.push(checkRight(objectType,x,y)['answer']);
+	if (checkRight(board,objectType,x,y)['type'] ){
+		moves.push(checkRight(board,objectType,x,y)['answer']);
 	}
-	if ( checkUp(objectType,x,y)['type'] ){
-		moves.push(checkUp(objectType,x,y)['answer']);
+
+	if ( checkUp(board,objectType,x,y)['type'] ){
+		moves.push(checkUp(board,objectType,x,y)['answer']);
 	}
-	if (checkDown(objectType,x,y)['type']){
-		moves.push(checkDown(objectType,x,y)['answer'])
+	if (checkDown(board,objectType,x,y)['type']){
+		moves.push(checkDown(board,objectType,x,y)['answer'])
 	}
 
 	if (objectType!=1 && objectType!=4){
-		if (checkUpLeft(objectType,x,y)['type']){
-			moves.push(checkUpLeft(objectType,x,y)['answer']);
+		if (checkUpLeft(board,objectType,x,y)['type']){
+			moves.push(checkUpLeft(board,objectType,x,y)['answer']);
 		}
-		if (checkUpRight(objectType,x,y)['type'] ){
-			moves.push(checkUpRight(objectType,x,y)['answer']);
+		if (checkUpRight(board,objectType,x,y)['type'] ){
+			moves.push(checkUpRight(board,objectType,x,y)['answer']);
 		}
-		if ( checkDownLeft(objectType,x,y)['type'] ){
-			moves.push(checkDownLeft(objectType,x,y)['answer']);
+		if ( checkDownLeft(board,objectType,x,y)['type'] ){
+			moves.push(checkDownLeft(board,objectType,x,y)['answer']);
 		}
-		if (checkDownRight(objectType,x,y)['type']){
-			moves.push(checkDownRight(objectType,x,y)['answer'])
+		if (checkDownRight(board,objectType,x,y)['type']){
+			moves.push(checkDownRight(board,objectType,x,y)['answer'])
 		}
 	}
-	// console.log(moves);
 	final_moves = []
 	for (let i=0;i<moves.length;i++){
 		final_moves.push([[x,y],moves[i]]);	
 	}
-	// console.log(final_moves);
 	return final_moves;
-
 }
 
-function checkInArray(array,val){
-	for (let i=0;i<array.length;i++){
-		if (array[i] == val){
+function checkInArray(array1,val){
+	for (let i=0;i<array1.length;i++){
+		if (array1[i] == val){
 			return true;
 		}
 	}
@@ -212,13 +203,13 @@ function oppositeValues(val){
 	if (val == 1 || val ==2 || val ==3){
 		return [4,5,6];
 	}
-	if (val == 3||val==4||val==5){
+	if (val == 4||val==5||val==6){
 		return [1,2,3]
 	}
 }
 
 
-function checkUpLeft(initValue,x,y){
+function checkUpLeft(board,initValue,x,y){
 	if (y==0 || x==0){
 		return {
 			'type':false,
@@ -232,7 +223,7 @@ function checkUpLeft(initValue,x,y){
 	}
 	let oppValues = oppositeValues(initValue);
 	if (checkInArray(oppValues,board[x-1][y-1])){
-		if (board[x-2][y-2]==undefined){
+		if (x-2<0 || y-2<0){
 			return {
 				'type':false
 			}
@@ -255,7 +246,7 @@ function checkUpLeft(initValue,x,y){
 }
 
 
-function checkUpRight(initValue,x,y){
+function checkUpRight(board,initValue,x,y){
 	if (y==8 || x==0){
 		return {
 			'type':false,
@@ -268,8 +259,9 @@ function checkUpRight(initValue,x,y){
 		}
 	}
 	let oppValues = oppositeValues(initValue);
+
 	if (checkInArray(oppValues,board[x-1][y+1])){
-		if (board[x-2][y+2]==undefined){
+		if (x-2<0 || y+2>8){
 			return {
 				'type':false
 			}
@@ -292,12 +284,13 @@ function checkUpRight(initValue,x,y){
 }
 
 
-function checkDownRight(initValue,x,y){
+function checkDownRight(board,initValue,x,y){
 	if (y==8 || x==15){
 		return {
 			'type':false,
 		}
 	}
+
 	if (board[x+1][y+1] == 0){
 		return {
 			'type':true,
@@ -305,8 +298,9 @@ function checkDownRight(initValue,x,y){
 		}
 	}
 	let oppValues = oppositeValues(initValue);
+
 	if (checkInArray(oppValues,board[x+1][y+1])){
-		if (board[x+2][y+2]==undefined){
+		if (x+2>15||y+2>8){
 			return {
 				'type':false
 			}
@@ -329,7 +323,7 @@ function checkDownRight(initValue,x,y){
 }
 
 
-function checkDownLeft(initValue,x,y){
+function checkDownLeft(board,initValue,x,y){
 	if (y==0 || x==15){
 		return {
 			'type':false,
@@ -342,8 +336,9 @@ function checkDownLeft(initValue,x,y){
 		}
 	}
 	let oppValues = oppositeValues(initValue);
+
 	if (checkInArray(oppValues,board[x+1][y-1])){
-		if (board[x+2][y-2]==undefined){
+		if (x+2>15 || y-2<0){
 			return {
 				'type':false
 			}
@@ -367,7 +362,7 @@ function checkDownLeft(initValue,x,y){
 
 
 
-function checkLeft(initValue,x,y){
+function checkLeft(board,initValue,x,y){
 	if (y==0){
 		return {
 			'type':false,
@@ -380,8 +375,9 @@ function checkLeft(initValue,x,y){
 		}
 	}
 	let oppValues = oppositeValues(initValue);
+
 	if (checkInArray(oppValues,board[x][y-1])){
-		if (board[x][y-2]==undefined){
+		if (y-2<0){
 			return {
 				'type':false
 			}
@@ -403,7 +399,7 @@ function checkLeft(initValue,x,y){
 	}
 }
 
-function checkRight(initValue,x,y){
+function checkRight(board,initValue,x,y){
 	if (y==8){
 		return {
 			'type':false,
@@ -416,8 +412,9 @@ function checkRight(initValue,x,y){
 		}
 	}
 	let oppValues = oppositeValues(initValue);
+
 	if (checkInArray(oppValues,board[x][y+1])){
-		if (board[x][y+2]==undefined){
+		if (y+2>8){
 			return {
 				'type':false
 			}
@@ -439,7 +436,7 @@ function checkRight(initValue,x,y){
 	}
 }
 
-function checkUp(initValue,x,y){
+function checkUp(board,initValue,x,y){
 	if (x==0){
 		return {
 			'type':false,
@@ -453,7 +450,7 @@ function checkUp(initValue,x,y){
 	}
 	let oppValues = oppositeValues(initValue);
 	if (checkInArray(oppValues,board[x-1][y])){
-		if (board[x-2][y]==undefined){
+		if (x-2<0){
 			return {
 				'type':false
 			}
@@ -475,7 +472,7 @@ function checkUp(initValue,x,y){
 	}
 }
 
-function checkDown(initValue,x,y){
+function checkDown(board,initValue,x,y){
 	if (x==15){
 		return {
 			'type':false,
@@ -489,7 +486,7 @@ function checkDown(initValue,x,y){
 	}
 	let oppValues = oppositeValues(initValue);
 	if (checkInArray(oppValues,board[x+1][y])){
-		if (board[x+2][y]==undefined){
+		if (x+2>15){
 			return {
 				'type':false
 			}
@@ -523,40 +520,40 @@ function init(){
 		    inputButton.type = 'button';
 		    let buttonType;
 		    if (i==0 && j==4){
-		    	buttonType = '3';
+		    	buttonType = 3;
 		    	inputButton.style.backgroundColor = "red";
 		    }
 		    else if (i==0){
-		    	buttonType = '2';
+		    	buttonType = 2;
 		    	inputButton.style.backgroundColor = "yellow";
 		    }
 
 		    else if (i==1){
-		    	buttonType = '1';
+		    	buttonType = 1;
 		    	inputButton.style.backgroundColor = "green";
 		    }
 
 		    else if (i==15 && j==4){
-		    	buttonType = '6';
+		    	buttonType = 6;
 		    	inputButton.style.backgroundColor = "blue";
 		    }
 
 		    else if (i==14){
-		    	buttonType = '4';
+		    	buttonType = 4;
 		    	inputButton.style.backgroundColor = "cyan";
 		    }
 
 		    else if (i==15){
-		    	buttonType = '5';
+		    	buttonType = 5;
 		    	inputButton.style.backgroundColor = "black";
 		    }
 		    
 		    else {
-		    	buttonType = '0';
+		    	buttonType = 0;
 		    	inputButton.style.backgroundColor = "white";
 		    }
-		    inputButton.id=i.toString()+','+j.toString()
-		    boardRow.push(buttonType)
+		    inputButton.id=i.toString()+','+j.toString();
+		    boardRow.push(buttonType);
 		    inputButton.onclick = function(){
 		    	buttonClicked(this)
 		    }
@@ -566,7 +563,7 @@ function init(){
 	    table.appendChild(tr);
 	    board.push(boardRow);
 	}
-	document.body.appendChild(table);
+	document.getElementById('game').appendChild(table);
 	// board[5][5]=2;
 	// board[6][6]=5;
 }
